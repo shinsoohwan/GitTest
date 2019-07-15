@@ -24,7 +24,7 @@
 // 		List boardList = bd.getBoardList();   
 		
 		int count = bd.getBoardCount(); // 게시판 글 수
-		int pageSize = 3; // 한 페이지에 보여줄 글 개수
+		int pageSize = 5; // 한 페이지에 보여줄 글 개수
 		String pageNum = request.getParameter("pageNum");   // 현재 페이지 번호
 		if(pageNum == null) { 
 			pageNum = "1";
@@ -71,8 +71,6 @@
 					<th class="tdate">작성일</th>
 					<th class="tread">조회수</th>
 				</tr>
-				
-				
 				<%
 				if(boardList != null){
 					for(int i = 0; i < boardList.size(); i++){	// 리스트 
@@ -80,7 +78,19 @@
 	 			%>
 				<tr>
 					<td><%=bb.getNum() %></td>
-					<td><a href="board_content.jsp?num=<%=bb.getNum()%>&pageNum=<%=pageNum%>"><%=bb.getTitle() %></a></td>
+					<td>
+					<%
+				     // 답글이면 이미지 표시
+				     int wid=0; //들여쓰기 이미지 너비
+				     if(bb.getRe_lev()>0){
+				    	 wid=bb.getRe_lev()*10;
+				    	 %>
+				    	 <img src="level.gif" width="<%=wid%>" height="10">
+				    	 <img src="re.gif">
+				    	 <%
+				     }
+				     %>
+					<a href="board_content.jsp?num=<%=bb.getNum()%>&pageNum=<%=pageNum%>"><%=bb.getTitle() %></a></td>
 					<td><%=bb.getWriter() %></td>
 					<td><%=bb.getDate() %></td>
 					<td><%=bb.getReadcount() %></td>

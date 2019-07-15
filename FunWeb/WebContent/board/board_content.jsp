@@ -99,7 +99,7 @@
 			%>
 				<input type="button"  value="글수정" onclick="location.href='board_update.jsp?num=<%=bb.getNum()%>&pageNum=<%=pageNum%>'">
 				<input type="button" value="글삭제" onclick="location.href='board_deletePro.jsp?num=<%=bb.getNum()%>&pageNum=<%=pageNum%>'">
-			
+				<input type="button" value="답글쓰기" onclick="location.href='board_frewriteForm.jsp?num=<%=bb.getNum()%>&pageNum=<%=pageNum%>&re_ref=<%=bb.getRe_ref()%>&re_lev=<%=bb.getRe_lev() %>&re_seq=<%=bb.getRe_seq()%>'">
 			<%
 			}
 		}

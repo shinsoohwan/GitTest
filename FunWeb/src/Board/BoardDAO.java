@@ -79,7 +79,7 @@ public class BoardDAO {
 		try {
 			con = getConnection();
 
-			String sql = "select * from board order by num desc limit ?,?";// 최신자료글 맨 위로
+			String sql = "select * from board order by re_ref desc, re_seq asc limit ?,?";// 최신자료글 맨 위로
 			pstmt = con.prepareStatement(sql);
 			pstmt.setInt(1, startRow - 1);
 			pstmt.setInt(2, pageSize);
@@ -92,7 +92,10 @@ public class BoardDAO {
 				bb.setTitle(rs.getString("title"));
 				bb.setReadcount(rs.getInt("readcount"));
 				bb.setDate(rs.getDate("date"));
-
+				bb.setRe_ref(rs.getInt("re_ref"));
+				bb.setRe_lev(rs.getInt("re_lev"));
+				bb.setRe_seq(rs.getInt("re_seq"));
+				
 				boardList.add(bb);
 			}
 
@@ -113,7 +116,7 @@ public class BoardDAO {
 		try {
 			con = getConnection();
 
-			String sql = "select * from board where title like ? order by num desc limit ?,?";// 최신자료글 맨 위로
+			String sql = "select * from board where title like ? order by re_ref desc,re_seq asc limit ?,?";// 최신자료글 맨 위로
 			pstmt = con.prepareStatement(sql);
 			pstmt.setString(1, '%' + search + '%');
 			pstmt.setInt(2, startRow - 1);
@@ -127,6 +130,9 @@ public class BoardDAO {
 				bb.setTitle(rs.getString("title"));
 				bb.setReadcount(rs.getInt("readcount"));
 				bb.setDate(rs.getDate("date"));
+				bb.setRe_ref(rs.getInt("re_ref"));
+				bb.setRe_lev(rs.getInt("re_lev"));
+				bb.setRe_seq(rs.getInt("re_seq"));
 
 				boardList.add(bb);
 			}
@@ -190,6 +196,9 @@ public class BoardDAO {
 				bb.setReadcount(rs.getInt("readcount"));
 				bb.setDate(rs.getDate("date"));
 				bb.setFile(rs.getString("file"));
+				bb.setRe_ref(rs.getInt("re_ref"));
+				bb.setRe_lev(rs.getInt("re_lev"));
+				bb.setRe_seq(rs.getInt("re_seq"));
 			}
 
 		} catch (Exception e) {
@@ -236,7 +245,7 @@ public class BoardDAO {
 
 			int boardNum = boardNum() + 1;
 			
-			String sql = "insert into board(num,writer,title,content,readcount,date,file) values(?,?,?,?,?,now(),?)";
+			String sql = "insert into board(num,writer,title,content,readcount,date,file,re_ref,re_lev,re_seq) values(?,?,?,?,?,now(),?,?,?,?)";
 			pstmt = con.prepareStatement(sql);
 
 			pstmt.setInt(1, boardNum);
@@ -245,6 +254,9 @@ public class BoardDAO {
 			pstmt.setString(4, bb.getContent());
 			pstmt.setInt(5, 0); // 생성하는 글이므로 읽은 횟수 0
 			pstmt.setString(6, bb.getFile());
+			pstmt.setInt(7, boardNum);// 그룹번호 re_ref ==num
+			pstmt.setInt(8, 0);//들여쓰기 re_lev 0
+			pstmt.setInt(9, 0);//순서 re_seq 0
 
 			pstmt.executeUpdate();
 
@@ -257,6 +269,45 @@ public class BoardDAO {
 		}
 	}
 
+	// 답글 작성 - insert
+	public void reInsertBoard(BoardBean bb) {
+		int num=0;
+		try {
+			con=getConnection();
+			String sql="select max(num) from board";
+			pstmt=con.prepareStatement(sql);
+			rs=pstmt.executeQuery();
+			if(rs.next()) {
+			 num=rs.getInt("max(num)")+1;
+			}
+			
+			sql = "update board set re_seq = re_seq + 1 where re_ref = ? and re_seq > ?";
+			pstmt=con.prepareStatement(sql);
+			pstmt.setInt(1, bb.getRe_ref());
+			pstmt.setInt(2, bb.getRe_seq());
+			
+			pstmt.executeUpdate();
+			
+			sql="insert into board(num,writer,title,content,readcount,date,file,re_ref,re_lev,re_seq) values(?,?,?,?,?,now(),?,?,?,?)";
+			
+			pstmt=con.prepareStatement(sql);
+			pstmt.setInt(1, num); 
+			pstmt.setString(2, bb.getWriter());
+			pstmt.setString(3, bb.getTitle());
+			pstmt.setString(4, bb.getContent());
+			pstmt.setInt(5, 0); //readcount
+			pstmt.setString(6, bb.getFile());
+			pstmt.setInt(7, bb.getRe_ref());// 그룹번호 re_ref 그대로 사용
+			pstmt.setInt(8, bb.getRe_lev()+1);//들여쓰기 re_lev +1
+			pstmt.setInt(9, bb.getRe_seq()+1);//순서 re_seq +1
+			pstmt.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			closeDB(con, pstmt, rs);
+		}
+	}
+	
 	// 자료글 수정 - update
 	public void updateBoard(BoardBean bb) {
 		try {
